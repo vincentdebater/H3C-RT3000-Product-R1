@@ -1,0 +1,65 @@
+name: Build OpenWrt
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Initialization Environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo -E apt-get -y update
+        sudo -E apt-get -y purge $(dpkg -l | grep '^ii' | awk '{print $2}' | grep -vE 'lib|libc|gcc|g\+\+|zlib|make|git' | grep -vE '^linux-image-generic')
+        sudo -E apt-get -y install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison build-essential \
+          bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
+          git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev liblzo2-dev \
+          libncurses5-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkg-config \
+          python3 python3-pip python3-ply python3-docutils qemu-utils re2c rsync scons squashfs-tools subversion \
+          swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+        sudo -E apt-get -y autoremove --purge
+        sudo -E apt-get clean
+
+    - name: Load Custom Feeds (diy-part1.sh)
+      run: |
+        [ -e $GITHUB_WORKSPACE/diy-part1.sh ] && chmod +x $GITHUB_WORKSPACE/diy-part1.sh && $GITHUB_WORKSPACE/diy-part1.sh
+
+    - name: Update Feeds
+      run: |
+        cd openwrt || true # 如果你的源码在子目录，请根据实际情况调整
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
+    - name: Load Custom Configuration (diy-part2.sh)
+      run: |
+        [ -e $GITHUB_WORKSPACE/diy-part2.sh ] && chmod +x $GITHUB_WORKSPACE/diy-part2.sh && $GITHUB_WORKSPACE/diy-part2.sh
+
+    - name: Compile Firmware
+      run: |
+        echo "开始编译..."
+        # 视你的源码结构，如果根目录就是编译目录，直接执行 make 即可
+        # make defconfig
+        # make -j$(nproc)
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: OpenWrt-Firmware
+        path: bin/targets/
