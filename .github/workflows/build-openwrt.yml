@@ -1,58 +1,68 @@
-name: Build OpenWrt
+name: Build H3C Magic OpenWrt (HW-A)
 
 on:
-  repository_dispatch:
-  workflow_dispatch:
-
-permissions:
-  contents: write
+  workflow_dispatch: # 支持在 GitHub 页面手动点击触发编译
+  # push:
+  #   branches: [ main ] # 取消注释后：每次 git push 到 main 分支时自动触发编译
 
 jobs:
   build:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout
+    - name: 检查代码仓库 (Checkout)
       uses: actions/checkout@v4
 
-    - name: Initialization Environment
+    - name: 初始化编译环境 (Setup Build Environment)
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo -E apt-get -y update
-        sudo -E apt-get -y install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison build-essential \
-          bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
-          git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev liblzo2-dev \
-          libncurses5-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkg-config \
-          python3 python3-pip python3-ply python3-docutils qemu-utils re2c rsync scons squashfs-tools subversion \
-          swig texinfo uglifyjs upx-ucl unzip wget xmlto xxd zlib1g-dev coccinelle ocaml
-        sudo -E apt-get clean
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo apt-get update
+        sudo apt-get install -y build-essential clang flex bison gasm awk gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget
+        sudo apt-get clean
 
-    - name: Update Feeds
+    - name: 准备配置文件 (Apply Custom Config)
       run: |
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
+        # 1. 将仓库中的基础配置文件复制为 .config
+        cp configs/h3c-magic.config .config
+        
+        # 2. 追加目标硬件选择 (HW-A 硬件)
+        echo "CONFIG_TARGET_ipq50xx_arm_DEVICE_h3c_rw3000_hw_a=y" >> .config
+        
+        # 3. 替换/开启完整版 wpad 以支持 802.11k/r/v 快速漫游
+        sed -i 's/CONFIG_PACKAGE_wpad-basic-wolfssl=y/# CONFIG_PACKAGE_wpad-basic-wolfssl is not set/' .config
+        echo "CONFIG_PACKAGE_wpad-wolfssl=y" >> .config
+        
+        # 4. 保留 Passwall / 代理工具所需的内核 Netfilter 基础依赖
+        echo "CONFIG_PACKAGE_kmod-ipt-core=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ipt-conntrack=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ipt-extra=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ipt-nat=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ipt-ipopt=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ipt-tproxy=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ipt-ipset=y" >> .config
+        echo "CONFIG_PACKAGE_ipset=y" >> .config
 
-    - name: Use Custom Magic Config
-      run: |
-        # 直接将我们改好的 h3c-magic.config 复制为 .config 作为编译基准
-        cp -f configs/h3c-magic.config .config
-
-    - name: Generate Configuration
-      run: |
+        # 5. 自动补全并校验配置
         make defconfig
 
-    - name: Download Package Sources
+    - name: 下载源码依赖包 (Download Packages)
       run: |
-        make download -j8 || make download -j1
+        make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -vf {} \;
 
-    - name: Compile Firmware
+    - name: 开始固件编译 (Compile Firmware)
       run: |
-        echo "开始编译 H3C RW3000 固件..."
+        echo "开始编译..."
         make -j$(nproc) || make -j1 V=s
 
-    - name: Upload Artifacts
+    - name: 上传编译出的固件 (Upload Artifacts)
       uses: actions/upload-artifact@v4
       with:
-        name: OpenWrt-RW3000-Firmware
-        path: bin/targets/*/*/*
+        name: H3C-RW3000-HW-A-Firmware
+        path: |
+          bin/targets/ipq50xx/arm/*.bin
+          bin/targets/ipq50xx/arm/*.img
+          bin/targets/ipq50xx/arm/config.buildinfo
