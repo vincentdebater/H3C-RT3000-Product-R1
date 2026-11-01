@@ -1,12 +1,15 @@
+#!/bin/bash
+# ===================================================
+# diy-part2.sh (配置注入脚本)
+# ===================================================
+
 # 1. 启用 H3C RT3000 硬件目标
 echo "CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_rt3000=y" >> .config
 
-# 2. 引入 PassWall 依赖源及主程序
-echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >> feeds.conf.default
-echo 'src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages' >> feeds.conf.default
+# 2. 启用 PassWall 插件主程序
 echo "CONFIG_PACKAGE_luci-app-passwall=y" >> .config
 
-# 3. 启用内核级 ipset 及相关依赖（PassWall 运行必需）
+# 3. 启用 PassWall 依赖的内核级 ipset 模块
 echo "CONFIG_PACKAGE_kmod-ipt-ipset=y" >> .config
 echo "CONFIG_PACKAGE_kmod-nf-ipset=y" >> .config
 echo "CONFIG_PACKAGE_ipset=y" >> .config
