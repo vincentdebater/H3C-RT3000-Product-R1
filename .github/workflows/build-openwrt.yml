@@ -1,9 +1,7 @@
 name: Build H3C Magic OpenWrt (HW-A)
 
 on:
-  workflow_dispatch: # 支持在 GitHub 页面手动点击触发编译
-  # push:
-  #   branches: [ main ] # 取消注释后：每次 git push 到 main 分支时自动触发编译
+  workflow_dispatch:
 
 jobs:
   build:
@@ -22,29 +20,12 @@ jobs:
         sudo apt-get install -y build-essential clang flex bison gasm awk gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget
         sudo apt-get clean
 
-    - name: 准备配置文件 (Apply Custom Config)
+    - name: 应用自定义配置文件 (Apply Custom Config)
       run: |
-        # 1. 将仓库中的基础配置文件复制为 .config
+        # 直接将您写好的配置文件复制为 .config
         cp configs/h3c-magic.config .config
         
-        # 2. 追加目标硬件选择 (HW-A 硬件)
-        echo "CONFIG_TARGET_ipq50xx_arm_DEVICE_h3c_rw3000_hw_a=y" >> .config
-        
-        # 3. 替换/开启完整版 wpad 以支持 802.11k/r/v 快速漫游
-        sed -i 's/CONFIG_PACKAGE_wpad-basic-wolfssl=y/# CONFIG_PACKAGE_wpad-basic-wolfssl is not set/' .config
-        echo "CONFIG_PACKAGE_wpad-wolfssl=y" >> .config
-        
-        # 4. 保留 Passwall / 代理工具所需的内核 Netfilter 基础依赖
-        echo "CONFIG_PACKAGE_kmod-ipt-core=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-ipt-conntrack=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-ipt-extra=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-ipt-nat=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-ipt-ipopt=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-ipt-tproxy=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-ipt-ipset=y" >> .config
-        echo "CONFIG_PACKAGE_ipset=y" >> .config
-
-        # 5. 自动补全并校验配置
+        # 自动补全并校验配置
         make defconfig
 
     - name: 下载源码依赖包 (Download Packages)
