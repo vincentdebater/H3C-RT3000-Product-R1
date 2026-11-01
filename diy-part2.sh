@@ -1,22 +1,18 @@
 #!/bin/bash
 # ----------------------------------------------------------------
 # diy-part2.sh
-# 作用：1. 强制声明 IPQ50xx ARM 顶层 Target 与 Subtarget
-#       2. 锁定 RW3000 (HW-A) 硬件目标并关闭其他同系列机型
-#       3. 预置 PassWall 所需内核依赖（不集成插件本体）
-#       4. 替换为支持 802.11r/k/v 漫游的 wpad-openssl
 # ----------------------------------------------------------------
 
-# 1. 强制指定 IPQ50xx 顶层 Target 与架构（防止 make defconfig 变回 ath79）
+# 1. 强制指定 IPQ50xx 顶层 Target 与 Subtarget
 echo "CONFIG_TARGET_ipq50xx=y" >> .config
 echo "CONFIG_TARGET_ipq50xx_arm=y" >> .config
 
-# 2. 精准开启 H3C RW3000 (HW-A) 硬件目标，关闭其他同系列机型
+# 2. 锁定 H3C RW3000 (HW-A) 硬件目标，关闭其他机型
 echo "CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_rw3000_hw_a=y" >> .config
 sed -i 's/CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_rt3000=y/# CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_rt3000 is not set/g' .config
 sed -i 's/CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_nx30_hw_d=y/# CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_nx30_hw_d is not set/g' .config
 
-# 3. 预置 PassWall 所需的内核模块与底层依赖（不编译 luci-app-passwall 界面插件）
+# 3. 预置 PassWall 所需内核模块与依赖（不编译插件本体）
 echo "CONFIG_PACKAGE_kmod-ipt-ipset=y" >> .config
 echo "CONFIG_PACKAGE_kmod-nf-ipset=y" >> .config
 echo "CONFIG_PACKAGE_ipset=y" >> .config
@@ -27,7 +23,7 @@ echo "CONFIG_PACKAGE_dns2socks=y" >> .config
 echo "CONFIG_PACKAGE_microsocks=y" >> .config
 echo "CONFIG_PACKAGE_ipt2socks=y" >> .config
 
-# 4. 替换无线加密组件：强制启用 wpad-openssl 以完整支持 802.11r/k/v 漫游
-sed -i 's/CONFIG_PACKAGE_wpad-basic-wolfssl=y/# CONFIG_PACKAGE_wpad-basic-wolfssl is not set/g' .config
-sed -i 's/CONFIG_PACKAGE_wpad-basic=y/# CONFIG_PACKAGE_wpad-basic is not set/g' .config
+# 4. 选用 wpad-openssl 启用 802.11r/k/v 漫游（温和替换模式）
+echo "CONFIG_PACKAGE_wpad-basic=n" >> .config
+echo "CONFIG_PACKAGE_wpad-basic-wolfssl=n" >> .config
 echo "CONFIG_PACKAGE_wpad-openssl=y" >> .config
