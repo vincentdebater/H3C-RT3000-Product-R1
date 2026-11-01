@@ -35,6 +35,8 @@ jobs:
 
     - name: Load Custom Configuration (diy-part2.sh)
       run: |
+        # 强制清除旧配置，确保干净的环境
+        rm -f .config
         [ -e $GITHUB_WORKSPACE/diy-part2.sh ] && chmod +x $GITHUB_WORKSPACE/diy-part2.sh && $GITHUB_WORKSPACE/diy-part2.sh
 
     - name: Generate Configuration
@@ -43,11 +45,11 @@ jobs:
 
     - name: Download Package Sources
       run: |
-        make download -j8 || make download -j11 || make download -j1
+        make download -j8 || make download -j1
 
     - name: Compile Firmware
       run: |
-        echo "开始编译 H3C RW3000 固件..."
+        echo "开始编译 H3C RW3000 纯净漫游固件..."
         make -j$(nproc) || make -j1 V=s
 
     - name: Upload Artifacts
