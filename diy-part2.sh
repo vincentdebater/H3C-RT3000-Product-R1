@@ -1,24 +1,23 @@
 #!/bin/bash
 # ----------------------------------------------------------------
-# diy-part2.sh
-# 作用：1. 强制指定 IPQ50xx 顶层架构
-#       2. 清除默认的 cmcc_rax3000q，精准锁定 H3C RW3000 (HW-A)
-#       3. 预置 PassWall 所需内核模块与依赖
+# diy-part2.sh 完整终极锁定版
+# 适用项目：FlyFish-go/H3C-RT3000-Product-R1
+# 目标机型：联通版 H3C RW3000 (HW-A) [IPQ5018 / ARM 架构]
 # ----------------------------------------------------------------
 
-# 1. 强制指定 IPQ50xx 顶层 Target 与 Subtarget
+# 1. 强制指定 IPQ50xx 顶层架构（防止编译系统回退到默认的 ath79 MIPS 架构）
 echo "CONFIG_TARGET_ipq50xx=y" >> .config
 echo "CONFIG_TARGET_ipq50xx_arm=y" >> .config
 
-# 2. 强行关闭默认生成的 cmcc_rax3000q 及其他无关机型
-sed -i 's/CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_cmcc_rax3000q=y/# CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_cmcc_rax3000q is not set/g' .config
-sed -i 's/CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_rt3000=y/# CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_rt3000 is not set/g' .config
-sed -i 's/CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_nx30_hw_d=y/# CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_nx30_hw_d is not set/g' .config
+# 2. 清除并禁用其它所有同架构设备的干扰（彻底排除 cmcc_rax3000q 等机型）
+sed -i '/_cmcc_rax3000q=y/d' .config
+sed -i '/_h3c_rt3000=y/d' .config
+sed -i '/_h3c_nx30_hw_d=y/d' .config
 
-# 3. 精准开启 H3C RW3000 (HW-A) 硬件目标
+# 3. 严格精准锁定 H3C RW3000 (HW-A) 硬件目标
 echo "CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_rw3000_hw_a=y" >> .config
 
-# 4. 预置 PassWall 所需的内核模块与底层依赖
+# 4. 预置 PassWall 运行时必需的内核模块与底层依赖（不编译插件本身）
 echo "CONFIG_PACKAGE_kmod-ipt-ipset=y" >> .config
 echo "CONFIG_PACKAGE_kmod-nf-ipset=y" >> .config
 echo "CONFIG_PACKAGE_ipset=y" >> .config
