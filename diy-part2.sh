@@ -3,7 +3,7 @@
 # diy-part2.sh
 # 作用：1. 强制声明 IPQ50xx 顶层 Target 与 Subtarget（锁定 RW3000 HW-A）
 #       2. 预置 PassWall 运行时必需的所有内核模块与底层依赖
-#       3. 保留 QSDK 默认无线驱动组件，确保 mac80211 顺利编译
+#       3. 保留 QSDK 默认无线驱动组件
 # ----------------------------------------------------------------
 
 # 1. 强制指定 IPQ50xx 顶层 Target 与 Subtarget（防止 make defconfig 变回 ath79）
