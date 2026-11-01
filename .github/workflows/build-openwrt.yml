@@ -28,10 +28,6 @@ jobs:
           swig texinfo uglifyjs upx-ucl unzip wget xmlto xxd zlib1g-dev
         sudo -E apt-get clean
 
-    - name: Load Custom Feeds (diy-part1.sh)
-      run: |
-        [ -e $GITHUB_WORKSPACE/diy-part1.sh ] && chmod +x $GITHUB_WORKSPACE/diy-part1.sh && $GITHUB_WORKSPACE/diy-part1.sh
-
     - name: Update Feeds
       run: |
         ./scripts/feeds update -a
@@ -47,11 +43,11 @@ jobs:
 
     - name: Compile Firmware
       run: |
-        echo "开始编译，请耐心等待..."
+        echo "开始编译 H3C RW3000 纯净漫游固件..."
         make -j$(nproc) || make -j1 V=s
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: OpenWrt-Firmware
+        name: OpenWrt-RW3000-Clean
         path: bin/targets/*/*/*
