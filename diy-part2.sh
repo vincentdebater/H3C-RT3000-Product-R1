@@ -1,10 +1,8 @@
 #!/bin/bash
-# ===================================================
-# diy-part2.sh (配置注入脚本)
-# ===================================================
-
-# 1. 启用 H3C RT3000 硬件目标
-echo "CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_rt3000=y" >> .config
+# 1. 启用 H3C RW3000 (HW-A) 硬件目标，并关闭其他同系列机型以节省编译时间
+echo "CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_rw3000_hw_a=y" >> .config
+sed -i 's/CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_rt3000=y/# CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_rt3000 is not set/g' .config
+sed -i 's/CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_nx30_hw_d=y/# CONFIG_TARGET_DEVICE_ipq50xx_arm_DEVICE_h3c_nx30_hw_d is not set/g' .config
 
 # 2. 启用 PassWall 插件主程序
 echo "CONFIG_PACKAGE_luci-app-passwall=y" >> .config
