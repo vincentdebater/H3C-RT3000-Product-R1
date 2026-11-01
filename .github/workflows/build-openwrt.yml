@@ -33,10 +33,10 @@ jobs:
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
-    - name: Load Custom Configuration (diy-part2.sh)
+    - name: Use Custom Magic Config
       run: |
-        rm -f .config
-        [ -e $GITHUB_WORKSPACE/diy-part2.sh ] && chmod +x $GITHUB_WORKSPACE/diy-part2.sh && $GITHUB_WORKSPACE/diy-part2.sh
+        # 直接将我们改好的 h3c-magic.config 复制为 .config 作为编译基准
+        cp -f configs/h3c-magic.config .config
 
     - name: Generate Configuration
       run: |
