@@ -19,6 +19,16 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential clang flex bison gawk gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget coccinelle ocaml
         sudo apt-get clean
+    - name: 添加第三方软件源并更新
+      run: |
+        # 1. 把 Passwall 源码仓库地址写入到源码的 feeds 配置文件中
+        echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall.git;main' >> feeds.conf.default
+        
+        # 2. 更新所有软件源（此时会包含刚才加进去的 passwall）
+        ./scripts/feeds update -a
+        
+        # 3. 安装所有软件源里的包，生成编译菜单选项
+        ./scripts/feeds install -a
 
     - name: 更新与安装软件源 (Update & Install Feeds)
       run: |
