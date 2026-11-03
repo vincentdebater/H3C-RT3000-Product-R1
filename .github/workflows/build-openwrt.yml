@@ -30,25 +30,25 @@ jobs:
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
-    - name: 永久修复 geoview 的 Go 版本不兼容问题 (Fix geoview Makefile)
-      run: |
-        GEOWIEV_MK="feeds/passwall_packages/geoview/Makefile"
-        if [ -f "$GEOWIEV_MK" ]; then
-          echo "" >> "$GEOWIEV_MK"
-          echo "define Build/Prepare" >> "$GEOWIEV_MK"
-          echo "	\$(call Build/Prepare/Default)" >> "$GEOWIEV_MK"
-          echo "	sed -i 's/go 1\.25\.0/go 1.23/g' \$(PKG_BUILD_DIR)/go.mod" >> "$GEOWIEV_MK"
-          echo "	sed -i 's/go 1\.[0-9]\+/go 1.23/g' \$(PKG_BUILD_DIR)/go.mod" >> "$GEOWIEV_MK"
-          echo "endef" >> "$GEOWIEV_MK"
-          echo "Successfully injected go.mod patch into geoview Makefile"
-        else
-          echo "Warning: geoview Makefile not found at $GEOWIEV_MK"
-        fi
-
     - name: 应用自定义配置文件 (Apply Custom Config)
       run: |
         cp configs/h3c-magic.config .config
         make defconfig
+
+    - name: 启动后台实时 Go 版本修正守护进程 (Background Go Mod Patcher)
+      run: |
+        # 启动一个后台循环，每隔 0.5 秒自动扫描并降级所有解压出来的 go.mod
+        nohup bash -c '
+        while true; do
+          find build_dir/ feeds/ -name "go.mod" -type f 2>/dev/null | while read file; do
+            if grep -q "go 1\." "$file"; then
+              sed -i "s/^go [0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?/go 1.23/g" "$file"
+            fi
+          done
+          sleep 0.5
+        done
+        ' > /dev/null 2>&1 &
+        echo "Background go.mod patcher started successfully."
 
     - name: 下载源码依赖包 (Download Packages)
       run: |
