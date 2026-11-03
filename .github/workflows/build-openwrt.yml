@@ -22,46 +22,34 @@ jobs:
 
     - name: 添加 Passwall 官方 Feeds 源码
       run: |
-        # 写入官方 Passwall 依赖包源和主包源（使用标准的空格加分支名格式，避免解析错误）
         echo 'src-git passwall_packages https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git main' >> feeds.conf.default
         echo 'src-git passwall_luci https://github.com/Openwrt-Passwall/openwrt-passwall.git main' >> feeds.conf.default
 
     - name: 更新与安装软件源 (Update & Install Feeds)
       run: |
-        # 必须在应用配置前更新和安装 Feeds，否则配置中的 LuCI 选项会被系统忽略
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
+    - name: 永久修复 geoview 的 Go 版本不兼容问题 (Fix geoview Makefile)
+      run: |
+        GEOWIEV_MK="feeds/passwall_packages/geoview/Makefile"
+        if [ -f "$GEOWIEV_MK" ]; then
+          echo "" >> "$GEOWIEV_MK"
+          echo "define Build/Prepare" >> "$GEOWIEV_MK"
+          echo "	\$(call Build/Prepare/Default)" >> "$GEOWIEV_MK"
+          echo "	sed -i 's/go 1\.25\.0/go 1.23/g' \$(PKG_BUILD_DIR)/go.mod" >> "$GEOWIEV_MK"
+          echo "	sed -i 's/go 1\.[0-9]\+/go 1.23/g' \$(PKG_BUILD_DIR)/go.mod" >> "$GEOWIEV_MK"
+          echo "endef" >> "$GEOWIEV_MK"
+          echo "Successfully injected go.mod patch into geoview Makefile"
+        else
+          echo "Warning: geoview Makefile not found at $GEOWIEV_MK"
+        fi
+
     - name: 应用自定义配置文件 (Apply Custom Config)
       run: |
-        # 直接将您写好的配置文件复制为 .config
         cp configs/h3c-magic.config .config
-        
-        # 自动补全并校验配置
         make defconfig
 
-    - name: 修复 Go 版本不兼容问题 (Fix Go Mod Version)
-      run: |
-        # 1. 彻底查找 feeds 目录下的 geoview 并直接修改其 go.mod
-        find feeds/ -type d -name "geoview*" | while read dir; do
-          if [ -f "$dir/go.mod" ]; then
-            sed -i 's/go 1\.25\.0/go 1.23/g' "$dir/go.mod"
-            sed -i 's/go 1\.[0-9]\+/go 1.23/g' "$dir/go.mod"
-            echo "Fixed go.mod in $dir"
-          fi
-        done
-        
-        # 2. 如果已经存在 build_dir，也一并强改
-        if [ -d "build_dir" ]; then
-          find build_dir/ -type d -name "geoview*" | while read dir; do
-            if [ -f "$dir/go.mod" ]; then
-              sed -i 's/go 1\.25\.0/go 1.23/g' "$dir/go.mod"
-              sed -i 's/go 1\.[0-9]\+/go 1.23/g' "$dir/go.mod"
-              echo "Fixed go.mod in build_dir: $dir"
-            fi
-          done
-        fi
-        
     - name: 下载源码依赖包 (Download Packages)
       run: |
         make download -j8
