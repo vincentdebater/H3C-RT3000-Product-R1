@@ -42,11 +42,26 @@ jobs:
 
     - name: 修复 Go 版本不兼容问题 (Fix Go Mod Version)
       run: |
-        find feeds/ -name "go.mod" -type f -exec sed -i 's/go 1\.[0-9]\+\(\.[0-9]\+\)\?/go 1.23/g' {} +
+        # 1. 彻底查找 feeds 目录下的 geoview 并直接修改其 go.mod
+        find feeds/ -type d -name "geoview*" | while read dir; do
+          if [ -f "$dir/go.mod" ]; then
+            sed -i 's/go 1\.25\.0/go 1.23/g' "$dir/go.mod"
+            sed -i 's/go 1\.[0-9]\+/go 1.23/g' "$dir/go.mod"
+            echo "Fixed go.mod in $dir"
+          fi
+        done
+        
+        # 2. 如果已经存在 build_dir，也一并强改
         if [ -d "build_dir" ]; then
-          find build_dir/ -name "go.mod" -type f -exec sed -i 's/go 1\.[0-9]\+\(\.[0-9]\+\)\?/go 1.23/g' {} + || true
+          find build_dir/ -type d -name "geoview*" | while read dir; do
+            if [ -f "$dir/go.mod" ]; then
+              sed -i 's/go 1\.25\.0/go 1.23/g' "$dir/go.mod"
+              sed -i 's/go 1\.[0-9]\+/go 1.23/g' "$dir/go.mod"
+              echo "Fixed go.mod in build_dir: $dir"
+            fi
+          done
         fi
-
+        
     - name: 下载源码依赖包 (Download Packages)
       run: |
         make download -j8
