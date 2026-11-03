@@ -19,11 +19,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential clang flex bison gawk gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget coccinelle ocaml
         sudo apt-get clean
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 0db03a1f92e0dfb4eaf3527d0508106f03dd6c23
     - name: 添加 Passwall 官方 Feeds 源码
       run: |
         # 写入官方 Passwall 依赖包源和主包源（使用标准的空格加分支名格式，避免解析错误）
