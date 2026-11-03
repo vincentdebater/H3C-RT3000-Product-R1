@@ -19,12 +19,11 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential clang flex bison gawk gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget coccinelle ocaml
         sudo apt-get clean
-    - name: 添加第三方软件源并更新
+    - name: 添加第三方软件源
       run: |
         # 正确的分支连接符是 ^ 而不是 ;
         echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall.git^main' >> feeds.conf.default
-
-
+        
     - name: 更新与安装软件源 (Update & Install Feeds)
       run: |
         # 必须在应用配置前更新和安装 Feeds，否则配置中的 LuCI 选项会被系统忽略
