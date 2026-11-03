@@ -42,8 +42,10 @@ jobs:
 
     - name: 修复 Go 版本不兼容问题 (Fix Go Mod Version)
       run: |
-        # 递归查找 feeds 目录下的所有 go.mod，将高版本（如 1.25.0、1.24等）强制降级匹配为当前环境支持的 1.23
-        find feeds/ -name "go.mod" -exec sed -i 's/go 1\.[0-9]\+\(\.[0-9]\+\)\?/go 1.23/g' {} +
+        find feeds/ -name "go.mod" -type f -exec sed -i 's/go 1\.[0-9]\+\(\.[0-9]\+\)\?/go 1.23/g' {} +
+        if [ -d "build_dir" ]; then
+          find build_dir/ -name "go.mod" -type f -exec sed -i 's/go 1\.[0-9]\+\(\.[0-9]\+\)\?/go 1.23/g' {} + || true
+        fi
 
     - name: 下载源码依赖包 (Download Packages)
       run: |
