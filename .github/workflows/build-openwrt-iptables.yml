@@ -29,7 +29,7 @@ jobs:
     - name: 应用自定义配置文件与内核补丁 (Apply Custom Config & Kernel Patch)
       run: |
         # 1. 复制基础配置文件
-        cp configs/h3c-magic.config .config
+        cp configs/iptablesver-h3c-magic.config .config
         
         # 2. 强行向 IPQ50xx 内核配置文件注入 iptables socket/tproxy 匹配宏
         # 防止 make defconfig 编译时自动剔除 iptables-mod-socket 和 iptables-mod-tproxy
