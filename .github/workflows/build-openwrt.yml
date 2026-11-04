@@ -34,20 +34,6 @@ jobs:
         # 2. 运行第一次 defconfig
         make defconfig
         
-        # 3. 强制把需要的核心依赖追加到 .config 末尾
-        echo "CONFIG_PACKAGE_kmod-ipt-socket=y" >> .config
-        echo "CONFIG_PACKAGE_iptables-mod-socket=y" >> .config
-        echo "CONFIG_PACKAGE_kmod-ipt-conntrack=y" >> .config
-        
-        # 4. 再次运行 defconfig 让内核和包依赖自动对齐
-        make defconfig
-    
-    - name: 验证配置是否生效
-      run: |
-       grep "CONFIG_PACKAGE_iptables-mod-socket" .config
-       grep "CONFIG_PACKAGE_kmod-ipt-socket" .config    
-    
-
     - name: 下载源码依赖包 (Download Packages)
       run: |
         make download -j8
