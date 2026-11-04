@@ -36,8 +36,8 @@ jobs:
     
     - name: 验证配置是否生效
       run: |
-      grep "CONFIG_PACKAGE_iptables-mod-socket" .config
-      grep "CONFIG_PACKAGE_kmod-ipt-socket" .config    
+       grep "CONFIG_PACKAGE_iptables-mod-socket" .config
+       grep "CONFIG_PACKAGE_kmod-ipt-socket" .config    
     
 
     - name: 下载源码依赖包 (Download Packages)
