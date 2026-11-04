@@ -31,12 +31,7 @@ jobs:
         # 1. 复制基础配置文件
         cp configs/iptablesver-h3c-magic.config .config
         
-        # 2. 强行向 IPQ50xx 内核配置文件注入 iptables socket/tproxy 匹配宏
-        # 防止 make defconfig 编译时自动剔除 iptables-mod-socket 和 iptables-mod-tproxy
-        echo "CONFIG_NETFILTER_XT_MATCH_SOCKET=y" >> target/linux/ipq50xx/config-5.4
-        echo "CONFIG_NETFILTER_XT_TARGET_TPROXY=y" >> target/linux/ipq50xx/config-5.4
-        
-        # 3. 运行 defconfig 生成最终配置
+        # 2. 运行 defconfig 生成最终配置
         make defconfig
         
     - name: 下载源码依赖包 (Download Packages)
