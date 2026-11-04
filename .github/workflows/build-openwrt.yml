@@ -30,7 +30,11 @@ jobs:
       run: |
         # 1. 复制基础配置文件
         cp configs/h3c-magic.config .config
-        
+        # 强制在 .config 中清理掉互斥的旧版包
+        sed -i '/CONFIG_PACKAGE_firewall=y/d' .config
+        sed -i '/CONFIG_PACKAGE_dnsmasq=y/d' .config
+        echo "# CONFIG_PACKAGE_firewall is not set" >> .config
+        echo "# CONFIG_PACKAGE_dnsmasq is not set" >> .config
         # 2. 运行第一次 defconfig
         make defconfig
         
