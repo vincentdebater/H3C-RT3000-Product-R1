@@ -36,12 +36,6 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -vf {} \;
 
-    - name: 解压内核并自动填充默认配置 (Prepare & Refresh Kernel Config)
-      run: |
-        # 1. 解压内核源码并打上所有 QSDK 补丁
-        make target/linux/prepare V=s
-        # 2. 针对打完补丁后的完整内核，自动对所有新选项使用默认值
-        yes "" | make kernel_oldconfig
 
     - name: 开始固件编译 (Compile Firmware)
       run: |
