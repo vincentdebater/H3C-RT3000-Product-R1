@@ -31,9 +31,12 @@ jobs:
         # 1. 复制基础配置文件
         cp configs/iptablesver-h3c-magic.config .config
         
-        # 2. 运行 defconfig 生成最终配置
+        # 2. 运行 defconfig 生成基础配置
         make defconfig
         
+        # 3. 自动填充所有新增的内核配置项，防止内核编译时因交互式询问而中断报错
+        make kernel_olddefconfig
+
     - name: 下载源码依赖包 (Download Packages)
       run: |
         make download -j8
