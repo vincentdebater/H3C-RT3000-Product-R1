@@ -22,26 +22,26 @@ jobs:
 
     - name: 更新与安装软件源 (Update & Install Feeds)
       run: |
-        # 必须在应用配置前更新和安装 Feeds，否则配置中的 LuCI 选项会被系统忽略
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
-    - name: 应用自定义配置文件与内核补丁 (Apply Custom Config & Kernel Patch)
+    - name: 生成基础配置文件 (Generate Base Config)
       run: |
-        # 1. 复制基础配置文件
         cp configs/iptablesver-h3c-magic.config .config
-        
-        # 2. 运行 defconfig 生成基础配置
         make defconfig
-        
-        # 3. 刷新并自动填充 Linux 内核新增的默认配置项（核心修复）
-        yes "" | make kernel_oldconfig
 
     - name: 下载源码依赖包 (Download Packages)
       run: |
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -vf {} \;
+
+    - name: 解压内核并自动填充默认配置 (Prepare & Refresh Kernel Config)
+      run: |
+        # 1. 解压内核源码并打上所有 QSDK 补丁
+        make target/linux/prepare V=s
+        # 2. 针对打完补丁后的完整内核，自动对所有新选项使用默认值
+        yes "" | make kernel_oldconfig
 
     - name: 开始固件编译 (Compile Firmware)
       run: |
